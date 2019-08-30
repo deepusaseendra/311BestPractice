@@ -1,0 +1,210 @@
+Upgrade approach and steps from Siebel IP 2016 to IP 2019.2 version
+
+As per Oracle the below link should be followed for Siebel 19.2:
+https://docs.oracle.com/cd/E95904_01/books/UPG/database-upgrade-guide.pdf
+
+The following bookshelf article outlines supported upgrade paths for Siebel IP 2018 & 2019
+https://docs.oracle.com/cd/E95904_01/books/UPG/overview-of-siebel-database-environments.html#c_Supported_Upgrade_Paths_for_Siebel_CRM_Version170_cz1184825
+
+Windows Server 2019 certification information is not available at this time. It might take another few months before it becomes officially certified.
+
+As per Oracle there are no risks and challenges in the upgrade process for Siebel IP 2019.2 Upgrade. Directions have to be followed and performed at every step accurately. Different upgrade paths and all other supported paths are thoroughly tested, before any Siebel version is made General Avialbility.
+
+Attached the document which shows some of the issues and challenges we faced during the upgrade to Siebel IP 2018.10 version.
+
+Migration Resource Status shows Running for a long time	while Upgrading
+	
+Migration Resource process is crashed or terminated abruptly without writing proper error message in the log file, the Siebel Migration application will not be able to determine whether the process is running. Hence, Siebel Migration will show the Migration resource as running and the user will not be able to re-run the Migration.	
+
+Remediation	
+To change the status of the Migration Resource in the Siebel Migration application, perform the following steps. 
+1. Log in to the Siebel Server machine where the Migration Resource is running (Source or Target environment).
+2. Check whether the process of the Migration Resource is running. 
+- If the process is running in the system, wait until it completes. 
+- If the process is not running, perform the following steps. 
+a. Open the File System directory.
+b. Navigate to migration\<Archive Id>\log, where the <Archive Id> is Archive Id that is shown in the Execution tab on the Siebel Migration application.
+c. Open the log file of the resource that is showing it as showing it as running in a text editor. 
+d. Add "SBL-" in the log file, save the log file and close it from the editor.
+
+===========================================================================================================================
+
+Siebel upgrade Installation Issue Linux OS
+
+This could be due to huge folder size. check below if the scan of these folders is taking longer than few minutes, the main OUI thread times out with the following error message:
+Exception in thread "main" java.lang.OutOfMemoryError: Java heap space ,This can happen before the first window on the X server pops up. In such scenario the user experience is:
+No X window pops up.
+Several minutes where nothing happens.
+Java heap space error.
+A workaround for this matter can be to revoke the access from these folders, in which case, these are skipped.
+
+The folders in question are those under siebsrvr/docking or gtwysrvr/fs or any other folder that has more than 1 million files approximately.
+In order to bypass this situation:
+
+Look which folder under the installation directory has lots of files, such as, over 1 million or so. First candidates are filesystem folder or Siebel Remote 'docking', dx folders.
+Change permissions on these folders and restart the OUI wizard after this. On Unix OS platforms you can revoke permissions using a command of the type:
+chmod 000 <foldername>
+
+And, after the OUI installation completed, to readable:
+chmod 755 <foldername>
+
+========================================================================================================================
+
+REST Outbound call Unable to pass custom headers from Siebel
+BUG 29669954 - NOT ABLE TO CAPTURE REST OUTBOUND CALL THROUGH FIDDLER 
+=======================================
+Frequent dll error message noticed when navigating to Cases/Contacts in Siebel Public Sector application 
+
+Made changes in SIEBPROCW and SIEBMTSHW files and restarted the siebel application. Now we are not able to see the DLL error messages. 
+===============================================================================================
+REST Outbound unable to retrieve proxy BS output in WF process property
+Siebel Product Bug
+===================================================================================================
+Siebel Application is not loading in google chrome after Upgrade
+
+Please refer the document "Upgrade Of Chrome To 73 Not Supporting Go To View After Technical Error ( Doc ID 2523597.1 )" for details.
+That is why we have suggested o be on 72. 
+========================================================================================================
+Issue with Custom screens rendering after Upgrade 
+
+Remediation:
+	
+Set EnableSafeBoot parameter to FALSE at OM
+
+=============================================================================================
+Custom update from the customer lost after the upgrade/patch of Siebel IP 2018.12 of siebel.war	
+
+During update/patch of siebel.war under AI\applicationcontainer\webapps, the custom update from the customer is lost.	
+
+Remediation	
+Perform the following to preserve and manage custom client files on applicationcontainer:
+1. Define a context in applicationcontainer\conf\server.xml. This update to server.xml will also be required when upgrading Tomcat to higher version.
+2. Create a folder and copy the custom files to it as following.
+    a. Create a folder (For example, c:\siebelwebroot) where the tomcat/applicationcontainer is installed.
+    b. Create folders inside c:\siebelwebroot (The path similar to custom folders in your AI\applicationcontainer\webapps\siebel folder.) as following:
+         -  c:\siebelwebroot\scripts\siebel\offline\custom - place/copy here your custom files pertainting to AI\applicationcontainer\webapps\siebel\scripts\siebel\offline\custom
+         - c:\siebelwebroot\scripts\siebel\custom: place/copy here your custom files pertainting to AI\applicationcontainer\webapps\siebel\scripts\siebel\custom
+         - c:\siebelwebroot\images\custom: place/copy here your custom files pertainting to AI\applicationcontainer\webapps\siebel\images\custom
+         - c:\siebelwebroot\files\custom: place/copy here your custom files pertainting to AI\applicationcontainer\webapps\siebel\files\custom
+3. Locate the <Host> tag in server.xml file found at AI\applicationcontainer\conf and add the "Context docBase.." lines. There should be one entry of the context tag for each custom artifacts. Each entry (such as <Context docBase="c:/siebelwebroot/files/custom" path="/siebel/files/custom" />) of the context shall specify the location of the custom folder in the local disk and the URI to those artifacts relative to the base URL (the example shown is for windows, modify the docBase accordingly for Unix)
+       <Host name="localhost"  appBase="webapps"
+               unpackWARs="true" autoDeploy="true" >
+              <Context docBase="c:/siebelwebroot/scripts/siebel/offline/custom" path="/siebel/scripts/siebel/offline/custom" />
+              <Context docBase="c:/siebelwebroot/scripts/siebel/custom"  path="/siebel/scripts/siebel/custom" />
+              <Context docBase="c:/siebelwebroot/images/custom" path="/siebel/images/custom" /> 
+              <Context docBase="c:/siebelwebroot/files/custom" path="/siebel/files/custom" />
+              ................................
+              ................................
+              ................................
+      </Host>
+      NOTE: This update to server.xml is just an example of an entry like (<Context docBase="c:/siebelwebroot/files/custom" path="/siebel/files/custom" />)
+4. After you have created the context entries on your server.xml file, created the folder as specified in step 2, and copied your custom files to those corresponding folder, you must restart the tomcat.
+
+===================================================================================================================================
+
+Bulk order in async mode fails in multi server deployment	
+
+Bulk Request execution fails when running in async mode in an environment where the workflow components are running on different and multiple servers and dependent tasks are being processed across the components in different servers. 	
+
+Remediation	
+Use only one server where the workflow component is running on one server in the enterprise server.
+
+
+==================================================================================================================================
+
+Order detail view does not display correctly in iPad	
+	
+The Order detail view in the Partner Portal and eSales does not display correctly in iPad.
+
+=================================================================================================================================
+
+Changes to the Maximum Possible Connections and Minimum Possible Connections properties in the REST Inbound Defaults section of a deployed profile do not reflect immediately	
+	
+Changes made to the Maximum Possible Connections and Minimum Possible Connections properties in the REST Inbound Defaults section of a deployed profile do not take effect immediately after saving profile.  It requires a restart of the AI ApplicationContainer to which the given profile is deployed.	
+
+Remediation:
+Whenever changes are made to the Maximum Possible Connections and Minimum Possible Connections properties in the REST Inbound Defaults section of a deployed profile, restart the following AI ApplicationContainer: 
+Windows: /applicationcontainer/bin/shutdown.bat /applicationcontainer/bin/startup.bat 
+Non-Windows: /applicationcontainer/bin/shutdown.sh /applicationcontainer/bin/startup.sh
+
+=================================================================================================================================
+
+Overlapping sequence numbers	
+	
+When you apply multiple offers using the ApplyMultipleProductOffers Web service, the offer actions that have overlapping sequence numbers cause discrepancies in the order generation.	
+
+Remediation	
+Ensure the offer actions for multiple offers have unique sequences.
+
+=================================================================================================================================
+
+Invalid home name error during patch rollback process on Unix	
+	
+Patch rollback on some UNIX environment fails with the incorrect home name error on some UNIX environments. It occurs on the environment where the symbolic path was used for installation instead of the actual physical path.
+	
+Remediation	
+Modify the inventory file inventory.xml under oraInventory/contentsXML to refer the actual path instead of symbolic link. The rollback works fine and is successful.
+
+================================================================================================================================
+
+SSSE Outlook Add-in parameters can not be automatically set under Open UI	
+	
+In order to function properly, the SSSE Outlook Add-in requires the URL of the Siebel EAI Object Manager and several other pieces of information. With an HI client, these can be obtained from a running Siebel client using the Web Client Automation ActiveX control as documented in the chapter "Setting Up and Using Siebel Outlook Add-In" in the Siebel Server Sync Guide on the Siebel Bookshelf. The server parameters that provide this information to the client are MsgClientAddInEAIUrl, MsgClientAddInCacheRefreshInterval, and  MsgClientAddInLinkHistory. Because Open UI does not allow ActiveX controls to run, the Outlook Add-in is unable to retrieve this information from the Siebel Server.	
+
+Remediation	
+Enter this information manually.
+
+=====================================================================================================================================
+
+Connected Mobile displaying error message upon login	
+
+An error message, "Insufficient memory. Disconnected mode won't be supported." when you press the Login button using MAF (siebel.ipa) on an iPad.  Steps to reproduce:
+1. Application is in offline mode. 
+2. Go to Siebel.ipa and turn on clear download data. The application is still  running in the background.
+3. Open the application and you'll see a message saying, "Cookies and data will be deleted. This will take effect when the application is restarted."
+4. Click OK.
+5. Immediately close the application without performing an operation. 
+On performing Step 5, there will be no error if you restart the application. However, if you skip Step 5 and perform even one single operation, then when you restart the application and click the Login button, you'll see, "Insufficient memory. Disconnected mode won't be supported."   
+ 	
+Remediation	
+Navigate to IPad settings>Siebel>Enable Clear Data and clear attachments. Relaunch the application.
+
+
+========================================================================================================================================
+
+Siebel Field service Mobile Views are required to be added to Field Technician - Siebel Mobile responsibility	
+	
+Certain views must be added to Field Technician - Siebel Mobile responsibility to provide technician access to the required views.	
+Remediation	
+Perform the following steps:  
+1. Go to Site Map.  
+2. Select Administration-Application > Responsibilities.  
+3. Query for Field Technician - Siebel Mobile responsibility.
+4. In the Views applet, associate the following views:     
+- SHCE Service Activity Detail View - Mobile  
+- SHCE Service Activity Drill Down Assets List View - Mobile  
+- SHCE Service Activity Drill Down Attachment View - Mobile  
+- SHCE Service Activity Drill Down Contact Form View - Mobile  
+- SHCE Service Activity FS Asset Reading View - Mobile  
+- SHCE Service Activity FS Attachments View - Mobile  
+- SHCE Service Activity Review Detailed Report View - Mobile  
+- SHCE Service FS Activity Drill Down Recommended Parts Tools - Mobile  
+- SHCE FS My Part Browser View - Mobile  SHCE Technician Shifts View - Mobile
+- SHCE Technician Breaks View - Mobile
+
+===========================================================================================================================================
+
+
+If a Gateway Service that started a particular Siebel Server is stopped, the Siebel Server cannot spawn new Multi-threaded Processes	
+	
+Perform the following steps to reproduce the issue:
+1. Setup Gateway cluster with two or more service nodes.
+2. Log in to Server Manager and change MAXMTserver>MINMTserver for any AOM component, such as callcenter.
+3. Restart the Siebel Server. It starts with one of the Gateway service.
+4. Stop the Gateway service that started with the Siebel Server.
+5. Start (MaxTASK/MAXMTserver)*MINMTserver number of AOM URLs that would  exhaust all the sessions available with current number of AOM processes and will attempt to generate new process for next URL.
+6. The status of the new process can be checked in Server Manager using list process for component sccobjmgr_enu (for callcenter - it can be any AOM).
+Note that the new process ID that is created with starting status is killed. The new process is again started with a different process ID.
+	
+Remediation	
+Restart the impacted Siebel Server.
